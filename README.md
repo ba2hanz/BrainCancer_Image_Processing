@@ -1,30 +1,52 @@
-# Brain Cancer Classification
+# Brain Tumor MRI Sınıflandırma (Glioma / Meningioma / Tumor)
 
-Deep learning project for classifying brain tumor MRI images into `Brain_Glioma`, `Brain_Menin`, and `Brain_Tumor`.
+Beyin MR görüntülerini 3 sınıfa ayıran (Brain_Glioma, Brain_Menin, Brain_Tumor) derin öğrenme projesi. Transfer öğrenme, hibrit modelleme ve özel (custom) mimari içerir.
 
-## Project structure
-- `data/brain_cancer_data/` – train/validation/test folders (NOT in repo)
-- `data_preprocess.py` – Keras Sequence for multi-input models
-- `model_def.py` – Transfer, hybrid, and custom model definitions
-- `main.py` – Training, evaluation, and plotting
+## Özellikler
+- Tekli transfer öğrenme modelleri: EfficientNetV2L, InceptionResNetV2, ConvNeXtXLarge, DenseNet201
+- Hibrit model: Birden fazla backbone’den global özellik birleştirme
+- Özel (custom) mimari: Multi-Scale + Residual + Attention + Depthwise Separable (512x512 giriş)
+- Eğitim/Değerlendirme: EarlyStopping, ReduceLROnPlateau, en iyi ağırlıkların kaydı
+- Çıktılar: Accuracy/Loss grafikleri, Confusion Matrix, ROC-AUC, sınıflandırma raporu
 
-## Setup (recommended: Conda)
+## Proje Yapısı
+```
+project/
+├─ data/brain_cancer_data/        # (repoya dahil değil)
+│  ├─ train/                       # klasör adları sınıf etiketidir
+│  │  ├─ Brain_Glioma/
+│  │  ├─ Brain_Menin/
+│  │  └─ Brain_Tumor/
+│  ├─ validation/
+│  └─ test/
+├─ data_preprocess.py             # Keras Sequence (tekli/çoklu giriş destekli)
+├─ model_def.py                   # Transfer/hybrid/custom mimariler
+├─ main.py                        # Eğitim, değerlendirme ve kayıt
+├─ requirements.txt               # Bağımlılıklar
+└─ README.md
+```
+
+## Kurulum
+### 1) Hızlı (pip)
 ```bash
-# Create and activate env
+pip install -r requirements.txt
+```
+Not: GPU için Windows’ta pip tek başına CUDA/cuDNN kurmaz. GPU istiyorsanız Conda önerilir.
+
+### 2) Önerilen (Conda + GPU)
+```bash
+# Ortam oluşturma
 conda create -n brain-cancer python=3.11 -y
 conda activate brain-cancer
 
-# Install dependencies
+# TensorFlow GPU (Conda CUDA/cuDNN’i otomatik yönetir)
+conda install -c conda-forge tensorflow-gpu -y
+
+# Diğer paketler (gerekirse)
 pip install -r requirements.txt
 ```
 
-GPU (optional): Use Conda to manage CUDA/cuDNN easily:
-```bash
-conda install -c conda-forge tensorflow-gpu -y
-```
-
-## Data
-Place data in:
+## Veri Yerleşimi
 ```
 ./data/brain_cancer_data/
   train/
@@ -32,22 +54,47 @@ Place data in:
     Brain_Menin/
     Brain_Tumor/
   validation/
-    ...
+    Brain_Glioma/
+    Brain_Menin/
+    Brain_Tumor/
   test/
-    ...
+    Brain_Glioma/
+    Brain_Menin/
+    Brain_Tumor/
 ```
+Klasör adları etiket olarak kullanılır. Desteklenen uzantılar: .jpg/.jpeg/.png
 
-## Run training
+## Çalıştırma
 ```bash
 python main.py
 ```
-Outputs:
-- `results/plots/*`
-- `best_weights/*.keras`
-- `best_model/*.keras`
+- En iyi ağırlıklar: `best_weights/`
+- En iyi model: `best_model/`
+- Grafikler: `results/plots/`
+- Karşılaştırma tablosu: `results/model_comparison_results.csv`
 
-## Notes
-- Large data and outputs are git-ignored by default.
-- Custom model input size is 512x512.
-- For Windows GPU, prefer Conda-based TensorFlow GPU.
+## Custom Model (Özet)
+- Giriş: 512x512x3
+- Bloklar: Multi-Scale (1x1,3x3,5x5,7x7) + Residual + SE/Spatial Attention + Depthwise Separable
+- Global Average + Max Pool birleştirme, ardından sınıflandırma katmanları
+
+## İpuçları
+- `BASE_DIR` (`main.py`) varsayılan: `data/brain_cancer_data/`
+- Büyük dosyalar repoya dahil edilmez (`.gitignore` ile dışlandı)
+- GPU kullanımı: Conda tabanlı kurulum tercih edin
+
+## Sorun Giderme
+- GPU bulunamadı:
+  - Conda ortamında çalıştığınızdan emin olun: `conda activate brain-cancer`
+  - `python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"`
+  - Sürücü güncel mi? `nvidia-smi`
+- Bellek yetersizliği (OOM):
+  - `BATCH_SIZE` küçültün (örn. 16/8)
+  - Augmentation ve giriş boyutunu gözden geçirin
+- Eğitim çok yavaş:
+  - GPU üzerinde çalıştığınızdan emin olun
+  - Tekli modelle başlayın; hibritler daha ağırdır
+
+## Lisans
+Bu proje eğitim/araştırma amaçlıdır. Veri kaynağınızın lisans koşullarına uyunuz.
 
