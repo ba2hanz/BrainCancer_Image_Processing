@@ -1,4 +1,4 @@
-# Beyin Kanseri MRI Sınıflandırma (Glioma / Meningioma / Tumor)
+#(!!!GELİŞTİRME AŞAMASINDA!!!) Beyin Kanseri MRI Sınıflandırma (Glioma / Meningioma / Tumor) 
 
 Beyin MR görüntülerini 3 sınıfa ayıran (Brain_Glioma, Brain_Menin, Brain_Tumor) derin öğrenme projesi. Transfer öğrenme, hibrit modelleme ve özel (custom) mimari içerir.
 
